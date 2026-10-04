@@ -26,12 +26,16 @@ export class GitHubRepositoryProvider implements GitHubProvider {
     const prefix = this.prefix(job);
     const limitations: string[] = [];
     let title = 'Merge queue analysis', mergeable: boolean | null = true;
+    let diffBaseSha = job.baseSha;
     let files: ChangedFile[];
     if (job.kind === 'pull_request') {
       const { data } = await this.transport.request('GET', `${prefix}/pulls/${job.pullRequestNumber}`);
       const pr = prSchema.parse(data);
       if (pr.head.sha !== job.headSha || pr.base.sha !== job.baseSha || pr.state !== 'open') throw new StaleSnapshotError();
       title = pr.title; mergeable = pr.mergeable;
+      // Pull-request files use a three-dot diff; compare exported APIs against that merge base.
+      const comparison = z.object({ merge_base_commit: z.object({ sha: shaSchema }) }).parse((await this.transport.request('GET', `${prefix}/compare/${job.baseSha}...${job.headSha}?per_page=1`)).data);
+      diffBaseSha = comparison.merge_base_commit.sha;
       const records = await paginated(this.transport, `${prefix}/pulls/${job.pullRequestNumber}/files`, ghFileSchema, data => data, 3000);
       files = records.map(f => ({ path: f.filename, status: f.status, additions: f.additions, deletions: f.deletions, binary: f.patch === undefined, ...(f.patch !== undefined ? { patch: f.patch } : {}), ...(f.previous_filename ? { previousPath: f.previous_filename } : {}) }));
       if (files.length < pr.changed_files) limitations.push('PR diff is truncated by GitHub.');
@@ -59,17 +63,19 @@ export class GitHubRepositoryProvider implements GitHubProvider {
       sources.push({ path: blob.path, content: source, sha: job.headSha });
     }
     const baseSources: SourceFile[] = [];
+    if (files.filter(f => f.status !== 'added' && /\.[cm]?[jt]sx?$/.test(f.path)).length > maxSources) limitations.push('Changed base-source collection exceeds the analysis limit.');
     for (const file of files.filter(f => f.status !== 'added' && /\.[cm]?[jt]sx?$/.test(f.path)).slice(0, maxSources)) {
       const basePath = file.previousPath ?? file.path;
       try {
-        const response = await this.transport.request('GET', `${prefix}/contents/${basePath.split('/').map(encodeURIComponent).join('/')}?ref=${job.baseSha}`);
+        const response = await this.transport.request('GET', `${prefix}/contents/${basePath.split('/').map(encodeURIComponent).join('/')}?ref=${diffBaseSha}`);
         const data = z.object({ content: z.string(), encoding: z.literal('base64'), size: z.number() }).parse(response.data);
-        if (data.size <= 200_000) baseSources.push({ path: basePath, content: Buffer.from(data.content, 'base64').toString('utf8'), sha: job.baseSha });
+        if (data.size <= 200_000) baseSources.push({ path: basePath, content: Buffer.from(data.content, 'base64').toString('utf8'), sha: diffBaseSha });
         else limitations.push('A base source file exceeds the size limit.');
       } catch (error) { if (error instanceof GitHubHttpError && error.status === 404) limitations.push('A changed base file was not found.'); else throw error; }
     }
     const checks = await this.checks(job);
     const externalEvidence: RiskEvidence[] = [], providers: ProviderState[] = [];
+    providers.push({ source: 'diff-base', status: 'available', reason: `AST comparison uses diff base ${diffBaseSha}; the job base remains the target-branch freshness guard.` });
     try {
       const deps = await paginated(this.transport, `${prefix}/dependency-graph/compare/${job.baseSha}...${job.headSha}`, dependencySchema);
       for (const dependency of deps.filter(d => d.change_type === 'added')) for (const vulnerability of dependency.vulnerabilities) externalEvidence.push({ id: createHash('sha256').update(`${job.headSha}:${dependency.manifest}:${vulnerability.advisory_ghsa_id}`).digest('hex').slice(0, 24), code: 'DEPENDENCY_VULNERABILITY', category: 'dependencies', severity: vulnerability.severity === 'moderate' ? 'medium' : vulnerability.severity, confidence: 0.99, source: 'github-dependency-review', analyzerVersion: 'github-api-2026-03-10', message: 'GitHub Dependency Review reports a vulnerability in an added dependency.', location: { path: dependency.manifest, line: 1, sha: job.headSha }, metadata: { advisory: vulnerability.advisory_ghsa_id } });
@@ -93,7 +99,8 @@ export class GitHubRepositoryProvider implements GitHubProvider {
       }
     } else providers.push({ source: 'code-scanning', status: 'disabled', reason: 'Optional permission was not requested.' });
     providers.push({ source: 'coverage', status: 'disabled', reason: 'Coverage artifacts are not collected in the MVP. Related tests do not establish executed coverage.' });
-    if (files.some(f => /\.(py|go|java)$/.test(f.path))) limitations.push('AST adapters for Python, Go and Java are not implemented.');
+    if (files.some(f => /\.(py|go|java|rs|cs|rb|php|c|cc|cpp|h|hpp|swift|kt|kts|scala|vue|svelte)$/.test(f.path))) limitations.push('A changed source language has no implemented AST adapter.');
+    if (files.some(f => /\.[cm]?[jt]sx?$/.test(f.path) && f.patch === undefined)) limitations.push('A changed source file has no complete textual diff; changed-line checks are incomplete.');
     if (!(await this.isCurrent(job))) throw new StaleSnapshotError();
     return { job, title, files, sources, baseSources, repositoryPaths: paths, checks, mergeable, externalEvidence, providers, limitations: [...new Set(limitations)], history: { analyzed: 0, reverted: 0 } };
   }
