@@ -1,11 +1,225 @@
 import Link from 'next/link';
-import { ArrowLeft, ArrowUpRight, CheckCircle2, Clock3, GitCommitHorizontal, ShieldX, TriangleAlert } from 'lucide-react';
+import {
+  ArrowLeft,
+  ArrowUpRight,
+  CheckCircle2,
+  Clock3,
+  GitCommitHorizontal,
+  ShieldX,
+  TriangleAlert,
+} from 'lucide-react';
 import { RiskBadge, RiskBars, RiskRadar } from '@prism/ui';
 import type { Analysis } from '@prism/domain';
 import { EvidenceExplorer } from '../features/risk-explorer/explorer';
 import { AnalysisActions } from '../features/feedback/feedback';
-export function AnalysisDetail({ analysis, history, demo }: { analysis: Analysis; history: Analysis[]; demo: boolean }) {
+export function AnalysisDetail({
+  analysis,
+  history,
+  demo,
+}: {
+  analysis: Analysis;
+  history: Analysis[];
+  demo: boolean;
+}) {
   const reasons = analysis.decision.reasons;
-  const Icon = analysis.decision.outcome === 'BLOCK' ? ShieldX : analysis.decision.outcome === 'REVIEW' ? TriangleAlert : CheckCircle2;
-  return <><Link href={demo ? '/demo' : '/dashboard'} className="back-link"><ArrowLeft size={14} /> Back to overview</Link><div className="page-heading"><div><div className="eyebrow mono">{analysis.job.owner}/{analysis.job.repo} <span>/</span> PULL REQUEST #{analysis.job.pullRequestNumber ?? 'MERGE GROUP'}</div><h1>{analysis.title}</h1><div className="analysis-meta"><span><GitCommitHorizontal size={13} /><code>{analysis.job.headSha.slice(0, 7)}</code></span><span><Clock3 size={13} />{new Date(analysis.completedAt).toLocaleString('en-US', { timeZone: 'Asia/Seoul', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })} KST</span><span>Immutable snapshot</span></div></div><AnalysisActions analysisId={analysis.id} demo={demo} /></div><section className={`decision-banner ${analysis.decision.outcome.toLowerCase()}`}><div className="decision-icon"><Icon size={24} /></div><div><div className="eyebrow">MERGE DECISION</div><h2>{analysis.decision.outcome === 'BLOCK' ? 'Blocked from merging' : analysis.decision.outcome === 'REVIEW' ? 'Human review required' : 'Safe for this snapshot'}</h2><p>{reasons[0]?.message}</p></div><div className="decision-score"><strong className="mono">{analysis.overall}</strong><span>overall risk / 100</span></div></section><div className="detail-grid"><section className="panel"><div className="panel-heading"><h2>Risk breakdown</h2><RiskBadge outcome={analysis.decision.outcome} /></div><div className="risk-breakdown-content"><RiskBars scores={analysis.scores} /><RiskRadar scores={analysis.scores} /></div></section><section className="panel reason-panel"><div className="panel-heading"><h2>Why this decision?</h2><span className="count-tag">{reasons.length}</span></div>{reasons.map((reason, i) => <div className="reason-row" key={reason.code + i}><span className="reason-index mono">{String(i + 1).padStart(2, '0')}</span><div><strong>{reason.code.replaceAll('_', ' ').toLowerCase()}</strong><p>{reason.message}</p><small className="mono">{reason.evidenceIds.length} contributing findings</small></div></div>)}</section></div><EvidenceExplorer analysis={analysis} /><div className="detail-bottom-grid"><section className="panel"><div className="panel-heading"><h2>Analysis pipeline</h2><span className="mono muted">{Object.values(analysis.durations).reduce((sum, value) => sum + value, 0)} ms</span></div><div className="pipeline-stages">{Object.entries(analysis.durations).map(([name, duration]) => <div key={name}><span className={`stage-icon ${name === 'jev' && analysis.judge.status !== 'available' ? 'amber-text' : 'green-text'}`}>{name === 'jev' && analysis.judge.status !== 'available' ? <TriangleAlert size={14} /> : <CheckCircle2 size={14} />}</span><span>{name === 'jev' ? `Jev · ${analysis.judge.status}` : name.replaceAll('-', ' ')}</span><span className="mono muted">{duration} ms</span></div>)}</div></section><section className="panel"><div className="panel-heading"><h2>Risk timeline</h2><span className="tag">Commit history</span></div><div className="timeline">{[...history].sort((a, b) => a.completedAt.localeCompare(b.completedAt)).map(item => <Link className={`timeline-item ${item.id === analysis.id ? 'selected' : ''}`} key={item.id} href={`${demo ? '/demo' : ''}/analyses/${item.id}`}><span className="timeline-dot" /><div><strong className="mono">{item.job.headSha.slice(0, 7)}</strong><small>{item.title}</small></div><span className="mono">{item.overall}</span><RiskBadge outcome={item.decision.outcome} /></Link>)}</div></section></div><section className="panel provenance-panel"><div className="panel-heading"><h2>Decision provenance</h2>{!demo && <a className="text-link" href={`https://github.com/${analysis.job.owner}/${analysis.job.repo}/pull/${analysis.job.pullRequestNumber ?? ''}`} target="_blank" rel="noreferrer">View on GitHub <ArrowUpRight size={14} /></a>}</div><div className="provenance-grid"><div><span>Analyzer</span><code>{analysis.analyzerVersion}</code></div><div><span>Policy version</span><code>{analysis.policy.version}</code></div><div><span>Judge model</span><code>{analysis.judge.modelVersion}</code></div><div><span>Prompt version</span><code>{analysis.judge.promptVersion}</code></div><div><span>Input hash</span><code>{analysis.judge.inputHash.slice(0, 20)}</code></div><div><span>Base SHA</span><code>{analysis.job.baseSha.slice(0, 20)}</code></div></div>{analysis.providers.filter(p => p.status !== 'available').map(p => <p className="provider-note" key={p.source}><span className="tag">{p.source}: {p.status}</span>{p.reason}</p>)}{analysis.limitations.map((limitation, i) => <p className="provider-note amber-text" key={i}>{limitation}</p>)}</section></>;
+  const Icon =
+    analysis.decision.outcome === 'BLOCK'
+      ? ShieldX
+      : analysis.decision.outcome === 'REVIEW'
+        ? TriangleAlert
+        : CheckCircle2;
+  return (
+    <>
+      <Link href={demo ? '/demo' : '/dashboard'} className="back-link">
+        <ArrowLeft size={14} /> Back to overview
+      </Link>
+      <div className="page-heading">
+        <div>
+          <div className="eyebrow mono">
+            {analysis.job.owner}/{analysis.job.repo} <span>/</span> PULL REQUEST #
+            {analysis.job.pullRequestNumber ?? 'MERGE GROUP'}
+          </div>
+          <h1>{analysis.title}</h1>
+          <div className="analysis-meta">
+            <span>
+              <GitCommitHorizontal size={13} />
+              <code>{analysis.job.headSha.slice(0, 7)}</code>
+            </span>
+            <span>
+              <Clock3 size={13} />
+              {new Date(analysis.completedAt).toLocaleString('en-US', {
+                timeZone: 'Asia/Seoul',
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+              })}{' '}
+              KST
+            </span>
+            <span>Immutable snapshot</span>
+          </div>
+        </div>
+        <AnalysisActions analysisId={analysis.id} demo={demo} />
+      </div>
+      <section className={`decision-banner ${analysis.decision.outcome.toLowerCase()}`}>
+        <div className="decision-icon">
+          <Icon size={24} />
+        </div>
+        <div>
+          <div className="eyebrow">MERGE DECISION</div>
+          <h2>
+            {analysis.decision.outcome === 'BLOCK'
+              ? 'Blocked from merging'
+              : analysis.decision.outcome === 'REVIEW'
+                ? 'Human review required'
+                : 'Safe for this snapshot'}
+          </h2>
+          <p>{reasons[0]?.message}</p>
+        </div>
+        <div className="decision-score">
+          <strong className="mono">{analysis.overall}</strong>
+          <span>overall risk / 100</span>
+        </div>
+      </section>
+      <div className="detail-grid">
+        <section className="panel">
+          <div className="panel-heading">
+            <h2>Risk breakdown</h2>
+            <RiskBadge outcome={analysis.decision.outcome} />
+          </div>
+          <div className="risk-breakdown-content">
+            <RiskBars scores={analysis.scores} />
+            <RiskRadar scores={analysis.scores} />
+          </div>
+        </section>
+        <section className="panel reason-panel">
+          <div className="panel-heading">
+            <h2>Why this decision?</h2>
+            <span className="count-tag">{reasons.length}</span>
+          </div>
+          {reasons.map((reason, i) => (
+            <div className="reason-row" key={reason.code + i}>
+              <span className="reason-index mono">{String(i + 1).padStart(2, '0')}</span>
+              <div>
+                <strong>{reason.code.replaceAll('_', ' ').toLowerCase()}</strong>
+                <p>{reason.message}</p>
+                <small className="mono">{reason.evidenceIds.length} contributing findings</small>
+              </div>
+            </div>
+          ))}
+        </section>
+      </div>
+      <EvidenceExplorer analysis={analysis} />
+      <div className="detail-bottom-grid">
+        <section className="panel">
+          <div className="panel-heading">
+            <h2>Analysis pipeline</h2>
+            <span className="mono muted">
+              {Object.values(analysis.durations).reduce((sum, value) => sum + value, 0)} ms
+            </span>
+          </div>
+          <div className="pipeline-stages">
+            {Object.entries(analysis.durations).map(([name, duration]) => (
+              <div key={name}>
+                <span
+                  className={`stage-icon ${name === 'jev' && analysis.judge.status !== 'available' ? 'amber-text' : 'green-text'}`}
+                >
+                  {name === 'jev' && analysis.judge.status !== 'available' ? (
+                    <TriangleAlert size={14} />
+                  ) : (
+                    <CheckCircle2 size={14} />
+                  )}
+                </span>
+                <span>
+                  {name === 'jev' ? `Jev · ${analysis.judge.status}` : name.replaceAll('-', ' ')}
+                </span>
+                <span className="mono muted">{duration} ms</span>
+              </div>
+            ))}
+          </div>
+        </section>
+        <section className="panel">
+          <div className="panel-heading">
+            <h2>Risk timeline</h2>
+            <span className="tag">Commit history</span>
+          </div>
+          <div className="timeline">
+            {[...history]
+              .sort((a, b) => a.completedAt.localeCompare(b.completedAt))
+              .map((item) => (
+                <Link
+                  className={`timeline-item ${item.id === analysis.id ? 'selected' : ''}`}
+                  key={item.id}
+                  href={`${demo ? '/demo' : ''}/analyses/${item.id}`}
+                >
+                  <span className="timeline-dot" />
+                  <div>
+                    <strong className="mono">{item.job.headSha.slice(0, 7)}</strong>
+                    <small>{item.title}</small>
+                  </div>
+                  <span className="mono">{item.overall}</span>
+                  <RiskBadge outcome={item.decision.outcome} />
+                </Link>
+              ))}
+          </div>
+        </section>
+      </div>
+      <section className="panel provenance-panel">
+        <div className="panel-heading">
+          <h2>Decision provenance</h2>
+          {!demo && (
+            <a
+              className="text-link"
+              href={`https://github.com/${analysis.job.owner}/${analysis.job.repo}/pull/${analysis.job.pullRequestNumber ?? ''}`}
+              target="_blank"
+              rel="noreferrer"
+            >
+              View on GitHub <ArrowUpRight size={14} />
+            </a>
+          )}
+        </div>
+        <div className="provenance-grid">
+          <div>
+            <span>Analyzer</span>
+            <code>{analysis.analyzerVersion}</code>
+          </div>
+          <div>
+            <span>Policy version</span>
+            <code>{analysis.policy.version}</code>
+          </div>
+          <div>
+            <span>Judge model</span>
+            <code>{analysis.judge.modelVersion}</code>
+          </div>
+          <div>
+            <span>Prompt version</span>
+            <code>{analysis.judge.promptVersion}</code>
+          </div>
+          <div>
+            <span>Input hash</span>
+            <code>{analysis.judge.inputHash.slice(0, 20)}</code>
+          </div>
+          <div>
+            <span>Base SHA</span>
+            <code>{analysis.job.baseSha.slice(0, 20)}</code>
+          </div>
+        </div>
+        {analysis.providers
+          .filter((p) => p.status !== 'available')
+          .map((p) => (
+            <p className="provider-note" key={p.source}>
+              <span className="tag">
+                {p.source}: {p.status}
+              </span>
+              {p.reason}
+            </p>
+          ))}
+        {analysis.limitations.map((limitation, i) => (
+          <p className="provider-note amber-text" key={i}>
+            {limitation}
+          </p>
+        ))}
+      </section>
+    </>
+  );
 }
