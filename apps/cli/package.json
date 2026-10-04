@@ -1,0 +1,27 @@
+{
+  "name": "@prism/cli",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node --import tsx src/index.ts",
+    "build": "tsup src/index.ts --format esm --platform node --packages external"
+  },
+  "dependencies": {
+    "@prism/domain": "workspace:*",
+    "@prism/github": "workspace:*",
+    "@prism/judge": "workspace:*",
+    "@prism/database": "workspace:*",
+    "@prism/application": "workspace:*",
+    "@prism/observability": "workspace:*",
+    "@prism/config": "workspace:*",
+    "@prism/policy": "workspace:*",
+    "@prism/security": "workspace:*",
+    "@prism/risk-engine": "workspace:*",
+    "zod": "4.6.5"
+  },
+  "devDependencies": {
+    "tsup": "8.5.1",
+    "tsx": "4.23.15"
+  }
+}

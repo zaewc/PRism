@@ -15,7 +15,8 @@
     "check": "pnpm lint && pnpm typecheck && pnpm test",
     "db:migrate": "node --import tsx scripts/migrate.ts",
     "test:integration": "vitest run tests/integration",
-    "evaluate": "node --import tsx scripts/evaluate.ts"
+    "evaluate": "node --import tsx scripts/evaluate.ts",
+    "prism": "node --import tsx apps/cli/src/index.ts"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
