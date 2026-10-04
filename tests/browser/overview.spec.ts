@@ -3,7 +3,7 @@ test('fixture overview shows engine decisions and repository drilldown', async (
   await page.goto('/demo');
   await expect(page.getByRole('heading', { name: 'Repository health' })).toBeVisible();
   await expect(page.getByText('Synthetic PRs analyzed by the local engine.', { exact: false })).toBeVisible();
-  await expect(page.locator('.decision-table tbody tr')).toHaveCount(6);
+  await expect(page.locator('.decision-table tbody tr')).toHaveCount(7);
   const row = page.getByRole('row').filter({ hasText: '#378' });
   await expect(row).toContainText('Blocked');
   await page.getByRole('link', { name: 'Repositories', exact: true }).click();

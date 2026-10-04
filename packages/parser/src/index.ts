@@ -1,5 +1,6 @@
 import ts from 'typescript';
 import type { ParsedCall, ParsedFile, ParsedSymbol, ParserAdapter, SourceFile } from '@prism/domain';
+export const PARSER_VERSION = '2';
 
 export class TypeScriptParser implements ParserAdapter {
   supports(path: string) { return /\.[cm]?[jt]sx?$/.test(path); }
@@ -15,6 +16,21 @@ export class TypeScriptParser implements ParserAdapter {
       if (ts.isExportDeclaration(node)) {
         if (node.moduleSpecifier && ts.isStringLiteral(node.moduleSpecifier)) imports.push(node.moduleSpecifier.text);
         if (node.exportClause && ts.isNamedExports(node.exportClause)) exports.push(...node.exportClause.elements.map(e => e.name.text));
+        else if (node.exportClause && ts.isNamespaceExport(node.exportClause)) exports.push(node.exportClause.name.text);
+        else if (!node.exportClause) exports.push('*');
+        const name = `re-export:${node.exportClause?.getText(ast) ?? '*'}`;
+        symbols.push({ name, signature: node.getText(ast), line: line(node), endLine: line(node), exported: true, kind: 'variable' });
+      }
+      if (ts.isExportAssignment(node)) {
+        const value = node.expression;
+        const callable = ts.isArrowFunction(value) || ts.isFunctionExpression(value);
+        const signature = callable ? `default(${value.parameters.map(p => p.getText(ast)).join(',')}):${value.type?.getText(ast) ?? 'inferred'}` : value.getText(ast);
+        exports.push('default');
+        symbols.push({ name: 'default', signature, line: line(node), endLine: line(node), exported: true, kind: callable ? 'function' : 'variable' });
+      }
+      if (ts.isInterfaceDeclaration(node) || ts.isTypeAliasDeclaration(node)) {
+        symbols.push({ name: node.name.text, signature: node.getText(ast), line: line(node), endLine: ast.getLineAndCharacterOfPosition(node.end).line + 1, exported: exported(node), kind: 'type' });
+        if (exported(node)) exports.push(node.name.text);
       }
       if (ts.isCallExpression(node)) {
         const name = node.expression.getText(ast);

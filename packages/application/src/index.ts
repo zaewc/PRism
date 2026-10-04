@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto';
 import { analysisSchema, parsedFileSchema } from '@prism/domain';
 import type { Analysis, AnalysisCache, AnalysisJob, AnalysisStore, CheckReporter, GitHubProvider, JudgeModel, JudgeResult, MergePolicy, RepositorySnapshot, SourceFile } from '@prism/domain';
-import { analyzers, ParserRegistry } from '@prism/analysis';
+import { analyzers, ParserRegistry, PARSER_VERSION } from '@prism/analysis';
 import { EvidenceRiskAggregator, deterministicScores } from '@prism/risk-engine';
 import { DeterministicPolicyEngine } from '@prism/policy';
 import { redactSecrets } from '@prism/security';
@@ -14,7 +14,7 @@ export async function analyzeSnapshot(snapshot: RepositorySnapshot, policy: Merg
   const registry = new ParserRegistry();
   const parse = async (sources: SourceFile[], sha: string) => {
     const configuration = createHash('sha256').update(JSON.stringify(sources.map(s => [s.path, createHash('sha256').update(s.content).digest('hex')]))).digest('hex');
-    const key = `${snapshot.job.repositoryId}:${sha}:${snapshot.job.analyzerVersion}:${snapshot.job.configurationHash}:${configuration}:parser1`;
+    const key = `${snapshot.job.repositoryId}:${sha}:${snapshot.job.analyzerVersion}:${snapshot.job.configurationHash}:${configuration}:parser${PARSER_VERSION}`;
     const cached = await cache?.getCache(key);
     if (Array.isArray(cached)) return cached.map(item => parsedFileSchema.parse(item));
     const result = sources.flatMap(source => {

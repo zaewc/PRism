@@ -16,3 +16,10 @@ test('located evidence connects graph selection to the redacted diff', async ({ 
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
   expect(errors).toEqual([]);
 });
+test('deleted API evidence links to the existing base-commit source', async ({ page }) => {
+  await page.goto('/demo');
+  await page.getByRole('link', { name: 'Open analysis for PR 383', exact: true }).click();
+  await page.getByRole('button', { name: 'Inspect EXPORTED_API_CHANGED', exact: true }).click();
+  await expect(page.locator('.file-link')).toHaveAttribute('href', /\/blob\/b{40}\/src\/parse.ts#L1$/);
+  await expect(page.getByRole('heading', { name: 'Human review required' })).toBeVisible();
+});

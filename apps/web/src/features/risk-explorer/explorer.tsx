@@ -215,7 +215,7 @@ export function EvidenceExplorer({ analysis }: { analysis: Analysis }) {
               {finding.location && (
                 <a
                   className="file-link mono"
-                  href={`https://github.com/${analysis.job.owner}/${analysis.job.repo}/blob/${analysis.job.headSha}/${finding.location.path.split('/').map(encodeURIComponent).join('/')}#L${finding.location.line}`}
+                  href={`https://github.com/${analysis.job.owner}/${analysis.job.repo}/blob/${finding.location.sha}/${finding.location.path.split('/').map(encodeURIComponent).join('/')}#L${finding.location.line}`}
                   target="_blank"
                   rel="noreferrer"
                 >
