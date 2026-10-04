@@ -111,6 +111,7 @@ export interface CheckReporter {
 export interface AnalysisStore {
   getJob(id: string): Promise<StoredJob | null>;
   isInstallationActive(installationId: number): Promise<boolean>;
+  isLatestJob(id: string): Promise<boolean>;
   markRunning(id: string): Promise<void>;
   saveCheckRun(id: string, checkRunId: number): Promise<void>;
   saveResult(analysis: Analysis): Promise<void>;
