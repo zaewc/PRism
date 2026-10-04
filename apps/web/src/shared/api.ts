@@ -8,6 +8,10 @@ export function demoMutationGuard() {
     : null;
 }
 export async function readJson(request: Request): Promise<unknown> {
+  const declaredSize = Number(request.headers.get('content-length'));
+  if (Number.isFinite(declaredSize) && declaredSize > 64_000) {
+    throw new InvalidRequestError('REQUEST_TOO_LARGE');
+  }
   const reader = request.body?.getReader();
   if (!reader) throw new InvalidRequestError('EMPTY_BODY');
   const chunks: Uint8Array[] = [];
