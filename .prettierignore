@@ -1,0 +1,9 @@
+**/node_modules
+**/.next
+**/dist
+.pnpm-store
+.turbo
+test-results
+playwright-report
+pnpm-lock.yaml
+apps/web/next-env.d.ts

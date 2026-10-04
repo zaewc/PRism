@@ -19,7 +19,9 @@
     "prism": "node --import tsx apps/cli/src/index.ts",
     "test:e2e": "playwright test",
     "dev:services": "turbo dev --filter=@prism/github-app --filter=@prism/worker",
-    "dev:demo": "PRISM_DEMO=true pnpm --filter @prism/web dev"
+    "dev:demo": "PRISM_DEMO=true pnpm --filter @prism/web dev",
+    "format:web": "prettier --write apps/web/src packages/ui/src",
+    "format:check": "prettier --check apps/web/src packages/ui/src"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
@@ -28,13 +30,14 @@
     "@types/pg": "8.23.1",
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
+    "dotenv": "18.0.5",
     "eslint": "10.12.0",
-    "typescript-eslint": "8.71.0",
-    "typescript": "6.0.3",
+    "prettier": "3.9.9",
     "tsx": "4.23.15",
     "turbo": "2.11.7",
-    "vitest": "5.0.3",
-    "dotenv": "18.0.5"
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.71.0",
+    "vitest": "5.0.3"
   },
   "type": "module"
 }
