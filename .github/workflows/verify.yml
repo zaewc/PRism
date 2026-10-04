@@ -19,6 +19,10 @@ jobs:
           POSTGRES_DB: prism
         ports: ["5434:5432"]
         options: --health-cmd "pg_isready -U prism" --health-interval 3s --health-retries 15
+      redis:
+        image: redis:7-alpine
+        ports: ["6381:6379"]
+        options: --health-cmd "redis-cli ping" --health-interval 3s --health-retries 15
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4

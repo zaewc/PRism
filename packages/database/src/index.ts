@@ -77,6 +77,10 @@ export class PostgresStore implements AnalysisStore {
     return { job: parsed.input, policy: parsed.policy, status: parsed.status, checkRunId: parsed.check_run_id, result: parsed.result, error: parsed.error };
   }
   async isInstallationActive(id: number) { const row = (await this.pool.query('SELECT active FROM installations WHERE id=$1', [id])).rows[0]; return row ? z.object({ active: z.boolean() }).parse(row).active : false; }
+  async isLatestJob(id: string) {
+    const row = (await this.pool.query("SELECT NOT EXISTS (SELECT 1 FROM analysis_jobs newer WHERE newer.repository_id=current.repository_id AND newer.input->>'kind'=current.input->>'kind' AND COALESCE(newer.input->>'pullRequestNumber',newer.input->>'headSha')=COALESCE(current.input->>'pullRequestNumber',current.input->>'headSha') AND newer.created_at>current.created_at AND newer.status<>'stale') AS latest FROM analysis_jobs current WHERE current.id=$1", [id])).rows[0];
+    return row ? z.object({ latest: z.boolean() }).parse(row).latest : false;
+  }
   async markRunning(id: string) { await this.pool.query("UPDATE analysis_jobs SET status='running',error=NULL,updated_at=now() WHERE id=$1 AND status NOT IN ('completed','stale')", [id]); }
   async saveCheckRun(id: string, checkRunId: number) { await this.pool.query('UPDATE analysis_jobs SET check_run_id=$2 WHERE id=$1 AND (check_run_id IS NULL OR check_run_id=$2)', [id, checkRunId]); }
   async saveResult(analysis: Analysis) {
