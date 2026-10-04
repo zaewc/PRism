@@ -1,0 +1,5 @@
+import { notFound } from 'next/navigation';
+import Link from 'next/link';
+import { workspaceData } from '../../../../../shared/data';
+import { DecisionTable } from '../../../../../widgets/dashboard';
+export default async function Page({ params }: { params: Promise<{ owner: string; repo: string }> }) { const { owner, repo } = await params; const data = await workspaceData(); const repository = data.repositories.find(r => r.owner === owner && r.name === repo); if (!repository) notFound(); const filtered = { ...data, analyses: data.analyses.filter(a => a.job.repositoryId === repository.id) }; return <><div className="page-heading"><div><div className="eyebrow">REPOSITORY</div><h1>{owner}/{repo}</h1><p>Immutable PR snapshots. Required checks enforce decisions on GitHub.</p></div><Link href="/settings/policy" className="button secondary">Configure policy</Link></div><section className="panel"><div className="panel-heading"><h2>Pull requests</h2><Link href={`/repositories/${owner}/${repo}/pulls`} className="text-link">View all</Link></div><DecisionTable data={filtered} /></section></>; }
