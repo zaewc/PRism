@@ -1,0 +1,24 @@
+{
+  "tasks": {
+    "build": {
+      "dependsOn": [
+        "^build"
+      ],
+      "outputs": [
+        ".next/**",
+        "!.next/cache/**",
+        "dist/**"
+      ],
+      "env": [
+        "PRISM_DEMO",
+        "DATABASE_URL",
+        "NEXT_PUBLIC_APP_URL",
+        "GITHUB_APP_SLUG"
+      ]
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true
+    }
+  }
+}
