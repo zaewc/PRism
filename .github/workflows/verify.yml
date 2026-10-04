@@ -10,6 +10,15 @@ permissions:
 jobs:
   quality:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: prism
+          POSTGRES_PASSWORD: prism_local
+          POSTGRES_DB: prism
+        ports: ["5434:5432"]
+        options: --health-cmd "pg_isready -U prism" --health-interval 3s --health-retries 15
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -23,3 +32,4 @@ jobs:
       - run: pnpm lint
       - run: pnpm typecheck
       - run: pnpm test
+      - run: pnpm test:integration

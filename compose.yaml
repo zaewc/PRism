@@ -1,0 +1,25 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    ports: ["127.0.0.1:5434:5432"]
+    environment:
+      POSTGRES_USER: prism
+      POSTGRES_PASSWORD: prism_local
+      POSTGRES_DB: prism
+    volumes: ["postgres:/var/lib/postgresql/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U prism"]
+      interval: 3s
+      retries: 15
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--appendonly", "yes", "--maxmemory-policy", "noeviction"]
+    ports: ["127.0.0.1:6381:6379"]
+    volumes: ["redis:/data"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 3s
+      retries: 15
+volumes:
+  postgres:
+  redis:
