@@ -14,7 +14,7 @@ const transport = (job: { installationId: number; repositoryId: number }) => {
   if (!value) { value = new InstallationTransport({ appId: env.GITHUB_APP_ID, privateKey, ...job }, (remaining, reset) => log('github_rate_limit', { remaining, reset })); transports.set(key, value); }
   return value;
 };
-const runner = new AnalysisRunner({ store, github: job => new GitHubRepositoryProvider(transport(job), { codeScanning: env.GITHUB_CODE_SCANNING === 'true' }), reporter: job => new GitHubCheckReporter(transport(job), { appId: env.GITHUB_APP_ID, appUrl: env.APP_URL }), judge: new JevJudge({ apiKey: env.JEV_API_KEY, model: env.JEV_MODEL, timeoutMs: env.JEV_TIMEOUT_MS }) });
+const runner = new AnalysisRunner({ store, cache: store, github: job => new GitHubRepositoryProvider(transport(job), { codeScanning: env.GITHUB_CODE_SCANNING === 'true' }), reporter: job => new GitHubCheckReporter(transport(job), { appId: env.GITHUB_APP_ID, appUrl: env.APP_URL }), judge: new JevJudge({ apiKey: env.JEV_API_KEY, model: env.JEV_MODEL, timeoutMs: env.JEV_TIMEOUT_MS }) });
 const queue = analysisQueue(env.REDIS_URL);
 const worker = analysisWorker(env.REDIS_URL, id => runner.run(id), queue.name, env.WORKER_CONCURRENCY);
 worker.on('error', () => log('queue_worker_error'));

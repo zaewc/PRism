@@ -48,6 +48,8 @@ export interface SourceFile { path: string; content: string; sha: string }
 export interface ParsedSymbol { name: string; signature: string; line: number; endLine: number; exported: boolean; kind: 'function' | 'class' | 'variable' }
 export interface ParsedCall { name: string; line: number; literalArguments: string[]; dynamicArguments: boolean }
 export interface ParsedFile { path: string; language: string; imports: string[]; exports: string[]; symbols: ParsedSymbol[]; calls: ParsedCall[]; branches: number; parseErrors: number; unsafeAssertions: number }
+export const parsedFileSchema = z.object({ path: z.string(), language: z.string(), imports: z.array(z.string()), exports: z.array(z.string()), symbols: z.array(z.object({ name: z.string(), signature: z.string(), line: z.number().int(), endLine: z.number().int(), exported: z.boolean(), kind: z.enum(['function', 'class', 'variable']) })), calls: z.array(z.object({ name: z.string(), line: z.number().int(), literalArguments: z.array(z.string()), dynamicArguments: z.boolean() })), branches: z.number().int(), parseErrors: z.number().int(), unsafeAssertions: z.number().int() });
+export interface AnalysisCache { getCache(key: string): Promise<unknown | null>; setCache(key: string, value: unknown): Promise<void> }
 export interface ParserAdapter { supports(path: string): boolean; parse(file: SourceFile): ParsedFile }
 export interface ProviderState { source: string; status: 'available' | 'unavailable' | 'partial' | 'disabled'; reason: string }
 export interface CheckState { name: string; appId?: number; state: 'success' | 'failure' | 'pending'; sha: string }
