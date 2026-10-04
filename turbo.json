@@ -20,5 +20,11 @@
       "cache": false,
       "persistent": true
     }
-  }
+  },
+  "globalDependencies": [
+    "packages/**/src/**",
+    "evaluation/cases/**",
+    "scripts/load-env.mjs",
+    "tsconfig.json"
+  ]
 }

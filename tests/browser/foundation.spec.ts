@@ -4,6 +4,7 @@ test('landing renders on desktop and mobile without overflow or browser errors',
   await page.goto('/');
   await expect(page.getByRole('heading', { name: 'Know the risk before you merge.' })).toBeVisible();
   await expect(page.getByRole('link', { name: 'View demo', exact: true })).toHaveAttribute('href', '/demo');
+  await expect(page.getByRole('link', { name: 'Install GitHub App', exact: true })).toHaveAttribute('href', 'https://github.com/apps/prism-fixture-app/installations/new');
   await page.setViewportSize({ width: 390, height: 844 });
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
   expect(errors).toEqual([]);

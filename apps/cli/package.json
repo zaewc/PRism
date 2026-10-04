@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "start": "node --import tsx src/index.ts",
-    "build": "tsup src/index.ts --format esm --platform node --packages external"
+    "build": "tsup src/index.ts --format esm --platform node"
   },
   "dependencies": {
     "@prism/domain": "workspace:*",

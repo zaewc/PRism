@@ -10,7 +10,7 @@ export default defineConfig({
   timeout: 30_000, reporter: process.env.CI ? 'github' : 'list',
   use: { baseURL: 'http://127.0.0.1:3100', browserName: 'chromium', trace: 'retain-on-failure', screenshot: 'only-on-failure' },
   webServer: [
-    { command: 'node --import ../../scripts/load-env.mjs node_modules/next/dist/bin/next start --hostname 127.0.0.1 --port 3100', cwd: './apps/web', url: 'http://127.0.0.1:3100', env: { PRISM_DEMO: 'true', APP_URL: 'http://127.0.0.1:3100' }, timeout: 60_000 },
+    { command: 'node --import ../../scripts/load-env.mjs node_modules/next/dist/bin/next start --hostname 127.0.0.1 --port 3100', cwd: './apps/web', url: 'http://127.0.0.1:3100', env: { PRISM_DEMO: 'true', APP_URL: 'http://127.0.0.1:3100', GITHUB_APP_SLUG: 'prism-fixture-app' }, timeout: 60_000 },
     { command: 'node --import ../../scripts/load-env.mjs node_modules/next/dist/bin/next start --hostname 127.0.0.1 --port 3101', cwd: './apps/web', url: 'http://127.0.0.1:3101', env: { PRISM_DEMO: 'false', APP_URL: 'http://127.0.0.1:3101', PRISM_ADMIN_USER: 'test', PRISM_ADMIN_PASSWORD: 'test-only-operator-password', DATABASE_URL: testDatabase.toString() }, timeout: 60_000 },
   ],
 });
