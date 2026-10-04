@@ -35,6 +35,8 @@ export class DeterministicPolicyEngine implements PolicyEngine {
     }
     const testless = input.evidence.filter(e => e.code === 'CRITICAL_PATH_WITHOUT_TEST');
     if (policy.requireTestsForCriticalPaths && testless.length) add('block', 'CRITICAL_PATH_TESTS_REQUIRED', 'Critical code changed without a related changed test.', testless.map(e => e.id));
+    const apiChanges = input.evidence.filter(e => e.code === 'EXPORTED_API_CHANGED');
+    if (policy.reviewOnPublicApiChange && apiChanges.length) add('review', 'PUBLIC_API_REVIEW_REQUIRED', 'An exported API changed and requires compatibility review.', apiChanges.map(e => e.id));
     if (input.limitations.length) add(policy.failureMode.analysis === 'closed' ? 'block' : 'review', 'ANALYSIS_INCOMPLETE', 'Analysis has explicit limitations; inspect missing evidence.');
     if (input.judge.status !== 'available') {
       if (policy.failureMode.judge !== 'open') add(policy.failureMode.judge === 'closed' ? 'block' : 'review', 'JUDGE_UNAVAILABLE', input.judge.status === 'mock' ? 'Fixture judge cannot authorize a live merge.' : 'Jev is unavailable.');

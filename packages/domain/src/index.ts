@@ -30,6 +30,7 @@ export const policySchema = z.object({
   requirePassingCI: z.boolean().default(true),
   requiredChecks: z.array(z.object({ name: z.string().min(1), appId: z.number().int().positive().optional() })).default([]),
   requireTestsForCriticalPaths: z.boolean().default(true),
+  reviewOnPublicApiChange: z.boolean().default(true),
   criticalPaths: z.array(z.string().min(1)).default(['auth/', 'security/', 'payment/', 'billing/', 'session/', 'migration/', 'database/']),
   judge: z.object({ blockProbability: z.number().min(0).max(1).default(0.85), minConfidence: z.number().min(0).max(1).default(0.5), weight: z.number().min(0).max(0.5).default(0.25) }).default({ blockProbability: 0.85, minConfidence: 0.5, weight: 0.25 }),
   failureMode: z.object({ judge: z.enum(['review', 'closed', 'open']).default('review'), analysis: z.enum(['review', 'closed']).default('review') }).default({ judge: 'review', analysis: 'review' }),
