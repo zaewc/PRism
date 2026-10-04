@@ -22,9 +22,11 @@
     ],
     "paths": {
       "@prism/*": [
-        "./packages/*/src/index.ts"
+        "./packages/*/src/index.ts",
+        "./packages/*/src/index.tsx"
       ]
-    }
+    },
+    "allowImportingTsExtensions": true
   },
   "include": [
     "packages/**/*.ts",

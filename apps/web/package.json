@@ -1,0 +1,34 @@
+{
+  "name": "@prism/web",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "node --import ../../scripts/load-env.mjs node_modules/next/dist/bin/next dev --webpack --port 3000",
+    "build": "node --import ../../scripts/load-env.mjs node_modules/next/dist/bin/next build --webpack",
+    "start": "node --import ../../scripts/load-env.mjs node_modules/next/dist/bin/next start --port 3000"
+  },
+  "dependencies": {
+    "@prism/domain": "workspace:*",
+    "@prism/database": "workspace:*",
+    "@prism/policy": "workspace:*",
+    "@prism/config": "workspace:*",
+    "@prism/ui": "workspace:*",
+    "next": "16.3.8",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "@tanstack/react-query": "5.104.1",
+    "zod": "4.6.5",
+    "axios": "1.20.0",
+    "sonner": "2.0.8",
+    "lucide-react": "1.52.0",
+    "tailwindcss": "4.3.3",
+    "@tailwindcss/postcss": "4.3.3",
+    "server-only": "0.0.1",
+    "@prism/application": "workspace:*",
+    "@prism/judge": "workspace:*"
+  },
+  "devDependencies": {
+    "babel-plugin-react-compiler": "1.0.0"
+  }
+}
