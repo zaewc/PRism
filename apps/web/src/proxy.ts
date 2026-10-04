@@ -19,7 +19,8 @@ export function proxy(request: NextRequest) {
       // Protect state-changing browser requests against cross-origin form/subresource submission.
       if (!['GET', 'HEAD', 'OPTIONS'].includes(request.method)) {
         const origin = request.headers.get('origin');
-        if (origin !== request.nextUrl.origin) return new NextResponse('Same-origin request required', { status: 403 });
+        const expectedOrigin = process.env.APP_URL ? new URL(process.env.APP_URL).origin : `${request.nextUrl.protocol}//${request.headers.get('host') ?? request.nextUrl.host}`;
+        if (origin !== expectedOrigin) return new NextResponse('Same-origin request required', { status: 403 });
       }
       response.headers.set('Cache-Control', 'private, no-store');
       return response;
