@@ -38,8 +38,9 @@ export class DeterministicPolicyEngine implements PolicyEngine {
     const apiChanges = input.evidence.filter(e => e.code === 'EXPORTED_API_CHANGED');
     if (policy.reviewOnPublicApiChange && apiChanges.length) add('review', 'PUBLIC_API_REVIEW_REQUIRED', 'An exported API changed and requires compatibility review.', apiChanges.map(e => e.id));
     if (input.limitations.length) add(policy.failureMode.analysis === 'closed' ? 'block' : 'review', 'ANALYSIS_INCOMPLETE', 'Analysis has explicit limitations; inspect missing evidence.');
-    if (input.judge.status !== 'available') {
-      if (policy.failureMode.judge !== 'open') add(policy.failureMode.judge === 'closed' ? 'block' : 'review', 'JUDGE_UNAVAILABLE', input.judge.status === 'mock' ? 'Fixture judge cannot authorize a live merge.' : 'Jev is unavailable.');
+    if (input.judge.status === 'mock') add('review', 'FIXTURE_JUDGE', 'Fixture judgment cannot authorize a live merge.');
+    else if (input.judge.status !== 'available') {
+      if (policy.failureMode.judge !== 'open') add(policy.failureMode.judge === 'closed' ? 'block' : 'review', 'JUDGE_UNAVAILABLE', 'Jev is unavailable.');
       else reasons.push({ code: 'EXPLICIT_JUDGE_FAIL_OPEN', message: 'Repository policy explicitly permits deterministic-only decisions during judge failure.', evidenceIds: [] });
     } else {
       const confidence = input.judge.choice?.confidence ?? 0;

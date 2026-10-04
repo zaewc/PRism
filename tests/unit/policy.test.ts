@@ -30,6 +30,7 @@ describe('merge governance', () => {
     const noCI = policySchema.parse({ requirePassingCI: false });
     expect(engine.evaluate({ ...input, judge: { ...judge, status: 'unavailable' } }, noCI).outcome).toBe('REVIEW');
     expect(engine.evaluate({ ...input, judge: { ...judge, status: 'mock' } }, noCI).outcome).toBe('REVIEW');
+    expect(engine.evaluate({ ...input, judge: { ...judge, status: 'mock' } }, { ...noCI, failureMode: { judge: 'open', analysis: 'review' } }).outcome).toBe('REVIEW');
     expect(engine.evaluate({ ...input, limitations: ['truncated diff'] }, noCI).outcome).toBe('REVIEW');
     expect(engine.evaluate({ ...input, judge: { ...judge, status: 'unavailable' } }, policySchema.parse({ requirePassingCI: false, failureMode: { judge: 'closed' } })).outcome).toBe('BLOCK');
   });
