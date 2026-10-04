@@ -74,6 +74,15 @@ importers:
       '@prism/policy':
         specifier: workspace:*
         version: link:../../packages/policy
+      '@prism/risk-engine':
+        specifier: workspace:*
+        version: link:../../packages/risk-engine
+      '@prism/security':
+        specifier: workspace:*
+        version: link:../../packages/security
+      zod:
+        specifier: 4.6.5
+        version: 4.6.5
     devDependencies:
       tsup:
         specifier: 8.5.1
