@@ -1,6 +1,6 @@
 import path from 'node:path';
 import type { ParsedFile, RepositoryAnalyzer } from '@prism/domain';
-import { evidence, isCritical } from './evidence.js';
+import { evidence, isCritical, isProduction } from './evidence.js';
 
 export function resolveImport(from: string, specifier: string, paths: Set<string>): string | null {
   if (!specifier.startsWith('.')) return null;
@@ -26,7 +26,7 @@ export const dependencyAnalyzer: RepositoryAnalyzer = {
         const next = edges.filter(e => frontier.includes(e.to) && !visited.has(e.from)).map(e => e.from);
         next.forEach(n => visited.add(n)); frontier = next;
       }
-      const impacted = [...visited].filter(p => p !== file.path && isCritical(p, context.policy.criticalPaths));
+      const impacted = [...visited].filter(p => p !== file.path && isProduction(p) && isCritical(p, context.policy.criticalPaths));
       if (impacted.length) result.push(evidence(context, 'CRITICAL_DEPENDENCY_PATH', 'architecture', 'high', 0.85, 'A changed module has reverse dependency paths to critical code.', file.path, 1, { impactedFiles: impacted.sort().slice(0, 20), reachable: visited.size - 1 }));
     }
     return result;

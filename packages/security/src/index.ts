@@ -3,6 +3,7 @@ import { z } from 'zod';
 import type { AnalysisContext, RepositoryAnalyzer, RiskEvidence } from '@prism/domain';
 
 const secretPatterns = [
+  /-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----[\s\S]*?(?:-----END (?:RSA |EC |OPENSSH )?PRIVATE KEY-----|$)/g,
   /(?:ghp_|gho_|ghu_|ghs_|github_pat_)[A-Za-z0-9_]{20,}/g,
   /AKIA[A-Z0-9]{16}/g,
   /-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----/g,
