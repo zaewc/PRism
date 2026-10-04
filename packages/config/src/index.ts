@@ -18,7 +18,7 @@ const envSchema = z.object({
   WEBHOOK_PORT: z.coerce.number().int().positive().default(3001),
   WORKER_CONCURRENCY: z.coerce.number().int().min(1).max(8).default(2),
 });
-export function readServiceEnv() { loadLocalEnv(); return envSchema.parse(process.env); }
+export function readServiceEnv() { loadLocalEnv(); return envSchema.omit({ GITHUB_WEBHOOK_SECRET: true, WEBHOOK_PORT: true }).parse(process.env); }
 export function readWebhookEnv() {
   loadLocalEnv();
   return envSchema.pick({ DATABASE_URL: true, GITHUB_APP_ID: true, GITHUB_WEBHOOK_SECRET: true, WEBHOOK_PORT: true }).parse(process.env);

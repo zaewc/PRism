@@ -17,7 +17,9 @@
     "test:integration": "vitest run tests/integration",
     "evaluate": "node --import tsx scripts/evaluate.ts",
     "prism": "node --import tsx apps/cli/src/index.ts",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "dev:services": "turbo dev --filter=@prism/github-app --filter=@prism/worker",
+    "dev:demo": "PRISM_DEMO=true pnpm --filter @prism/web dev"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
