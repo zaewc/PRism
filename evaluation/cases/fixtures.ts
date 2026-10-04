@@ -18,6 +18,7 @@ export function goldenCases(): GoldenCase[] {
       externalEvidence: [], providers: [{ source: 'fixture', status: 'available', reason: 'Local synthetic fixture; no GitHub or Jev network call.' }, { source: 'coverage', status: 'disabled', reason: 'Executed coverage is not provided by this fixture.' }], limitations: [], history: { analyzed: 0, reverted: 0 },
     };
   };
+  const removed = snapshot(383, 'refactor: remove the public parser', 'src/parse.ts', '', 'export function parse(input: string): string { return input; }');
   return [
     { name: 'safe-docs', expected: 'SAFE', snapshot: snapshot(381, 'docs: clarify the deployment guide', 'docs/deployment.md', 'Deploy the worker separately from the webhook receiver.'), policy },
     { name: 'auth-without-test', expected: 'BLOCK', snapshot: snapshot(382, 'feat: update authentication flow', 'src/auth/login.ts', 'export const login = (user: string) => user;'), policy },
@@ -25,5 +26,6 @@ export function goldenCases(): GoldenCase[] {
     { name: 'breaking-api', expected: 'REVIEW', snapshot: snapshot(380, 'refactor: change the public parser API', 'src/parse.ts', 'export function parse(input: number): string { return String(input); }', 'export function parse(input: string): string { return input; }', true), policy },
     { name: 'credential-added', expected: 'BLOCK', snapshot: snapshot(378, 'chore: update provider configuration', 'src/config.ts', 'export const token = "ghp_' + 'x'.repeat(36) + '";'), policy },
     { name: 'pending-ci', expected: 'REVIEW', snapshot: { ...snapshot(377, 'docs: add policy examples', 'docs/policy.md', 'Require CI before merging.'), checks: [] }, policy },
+    { name: 'api-removed', expected: 'REVIEW', snapshot: { ...removed, files: removed.files.map(f => ({ ...f, status: 'removed', additions: 0, patch: '@@ -1 +0,0 @@\n-export function parse(input: string): string { return input; }' })), sources: [], repositoryPaths: [] }, policy },
   ];
 }
