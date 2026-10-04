@@ -1,5 +1,6 @@
 import { riskCategories } from '@prism/domain';
 import type { RiskAggregator, RiskEvidence, RiskScores } from '@prism/domain';
+export { calibrateRisk, evaluatePredictions } from './evaluation.js';
 
 const severity: Record<RiskEvidence['severity'], number> = { info: 2, low: 12, medium: 35, high: 65, critical: 95 };
 export function deterministicScores(evidence: RiskEvidence[]): RiskScores {
