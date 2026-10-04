@@ -120,4 +120,6 @@ export class PostgresStore implements AnalysisStore {
     });
     return id;
   }
+  async getCache(key: string): Promise<unknown | null> { const row = (await this.pool.query('SELECT value FROM snapshot_cache WHERE cache_key=$1 AND expires_at>now()', [key])).rows[0]; return row ? z.object({ value: z.unknown() }).parse(row).value : null; }
+  async setCache(key: string, value: unknown): Promise<void> { await this.pool.query("INSERT INTO snapshot_cache(cache_key,value,expires_at) VALUES($1,$2,now()+interval '7 days') ON CONFLICT(cache_key) DO UPDATE SET value=EXCLUDED.value,expires_at=EXCLUDED.expires_at", [key, JSON.stringify(value)]); }
 }

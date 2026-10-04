@@ -1,19 +1,31 @@
 import { createHash } from 'node:crypto';
-import { analysisSchema } from '@prism/domain';
-import type { Analysis, AnalysisJob, AnalysisStore, CheckReporter, GitHubProvider, JudgeModel, JudgeResult, MergePolicy, RepositorySnapshot } from '@prism/domain';
+import { analysisSchema, parsedFileSchema } from '@prism/domain';
+import type { Analysis, AnalysisCache, AnalysisJob, AnalysisStore, CheckReporter, GitHubProvider, JudgeModel, JudgeResult, MergePolicy, RepositorySnapshot, SourceFile } from '@prism/domain';
 import { analyzers, ParserRegistry } from '@prism/analysis';
 import { EvidenceRiskAggregator, deterministicScores } from '@prism/risk-engine';
 import { DeterministicPolicyEngine } from '@prism/policy';
 import { redactSecrets } from '@prism/security';
 import { log, stage } from '@prism/observability';
 
-export async function analyzeSnapshot(snapshot: RepositorySnapshot, policy: MergePolicy, judge: JudgeModel): Promise<Analysis> {
+export async function analyzeSnapshot(snapshot: RepositorySnapshot, policy: MergePolicy, judge: JudgeModel, cache?: AnalysisCache): Promise<Analysis> {
   const startedAt = new Date().toISOString();
   const durations: Record<string, number> = {};
   const timed = async <T>(name: string, action: () => Promise<T> | T) => { const begin = performance.now(); const value = await stage(name, action); durations[name] = Math.round(performance.now() - begin); return value; };
   const registry = new ParserRegistry();
-  const parsed = await timed('ast', () => snapshot.sources.flatMap(source => { const result = registry.parse(source); return result ? [result] : []; }));
-  const baseParsed = await timed('base-ast', () => snapshot.baseSources.flatMap(source => { const result = registry.parse(source); return result ? [result] : []; }));
+  const parse = async (sources: SourceFile[], sha: string) => {
+    const configuration = createHash('sha256').update(JSON.stringify(sources.map(s => [s.path, createHash('sha256').update(s.content).digest('hex')]))).digest('hex');
+    const key = `${snapshot.job.repositoryId}:${sha}:${snapshot.job.analyzerVersion}:${snapshot.job.configurationHash}:${configuration}:parser1`;
+    const cached = await cache?.getCache(key);
+    if (Array.isArray(cached)) return cached.map(item => parsedFileSchema.parse(item));
+    const result = sources.flatMap(source => {
+      const file = registry.parse(source); if (!file) return [];
+      return [{ ...file, imports: file.imports.map(redactSecrets), symbols: file.symbols.map(s => ({ ...s, signature: createHash('sha256').update(s.signature).digest('hex') })), calls: file.calls.map(c => ({ ...c, name: /^[$\w]+(?:\.[$\w]+)*$/.test(c.name) ? c.name : 'dynamic-call', literalArguments: [] })) }];
+    });
+    if (cache) await cache.setCache(key, result);
+    return result;
+  };
+  const parsed = await timed('ast', () => parse(snapshot.sources, snapshot.job.headSha));
+  const baseParsed = await timed('base-ast', () => parse(snapshot.baseSources, snapshot.job.baseSha));
   const context = { snapshot, policy, parsed, baseParsed };
   const evidence = [...snapshot.externalEvidence];
   for (const analyzer of analyzers) evidence.push(...await timed(analyzer.name, () => analyzer.analyze(context)));
@@ -31,7 +43,7 @@ export async function analyzeSnapshot(snapshot: RepositorySnapshot, policy: Merg
 }
 
 export class AnalysisRunner {
-  constructor(private readonly ports: { store: AnalysisStore; github: (job: AnalysisJob) => GitHubProvider; reporter: (job: AnalysisJob) => CheckReporter; judge: JudgeModel }) {}
+  constructor(private readonly ports: { store: AnalysisStore; github: (job: AnalysisJob) => GitHubProvider; reporter: (job: AnalysisJob) => CheckReporter; judge: JudgeModel; cache?: AnalysisCache }) {}
   async run(id: string): Promise<void> {
     await stage('analysis', async () => {
       const stored = await this.ports.store.getJob(id);
@@ -49,7 +61,7 @@ export class AnalysisRunner {
         checkId = await stage('check-start', () => reporter.start(job, checkId));
         await this.ports.store.saveCheckRun(id, checkId);
         await this.ports.store.audit('analysis_started', id, { headSha: job.headSha, baseSha: job.baseSha });
-        const result = stored.result ?? await analyzeSnapshot(await stage('repository-collection', () => github.collect(job, policy)), policy, this.ports.judge);
+        const result = stored.result ?? await analyzeSnapshot(await stage('repository-collection', () => github.collect(job, policy)), policy, this.ports.judge, this.ports.cache);
         if (!stored.result) await this.ports.store.saveResult(result);
         // A result is an immutable historical snapshot; publication uses a second live freshness guard.
         if (!(await github.isCurrent(job)) || !(await this.ports.store.isLatestJob(id))) {
