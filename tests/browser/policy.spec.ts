@@ -17,6 +17,8 @@ test('operator saves a versioned policy and conflicting updates are rejected', a
     expect(invalid.status()).toBe(400);
     const oversized = await context.request.put('/api/policies', { headers, data: { padding: 'x'.repeat(65_000) } });
     expect(oversized.status()).toBe(413);
+    const current = await context.request.get('/api/policies');
+    expect(current.status()).toBe(200);
   } finally { await context.close(); }
 });
 test('demo policy stays read-only in both editor and API', async ({ page, request }) => {
