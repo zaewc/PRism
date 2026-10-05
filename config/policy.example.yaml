@@ -1,0 +1,24 @@
+version: "1"
+thresholds:
+  review: 50
+  block: 75
+requirePassingCI: true
+requiredChecks:
+  - name: quality
+    # Set appId to the expected CI App ID discovered on this repository.
+blockOnCriticalSecurity: true
+blockHighDependencySeverity: true
+requireTestsForCriticalPaths: true
+reviewOnPublicApiChange: true
+criticalPaths:
+  - auth/
+  - security/
+  - payment/
+  - billing/
+  - session/
+  - migration/
+  - database/
+failureMode:
+  judge: review
+  analysis: review
+allowIgnore: false

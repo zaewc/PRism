@@ -18,9 +18,10 @@ PRism must produce a required GitHub check, explain its decision, and remain con
 8. Map SAFE to `success`, REVIEW to `action_required`, BLOCK to `failure`. REVIEW must not use `neutral` or `skipped`, which can satisfy required checks. Use `PRism` as a stable check name and bind rulesets to this App.
 9. Use separate webhook and worker processes, immutable results and append-only audit rows. Retry publication without rewriting a result. Identify checks by external job ID to recover a crash between remote creation and persistence. Bound annotations to 50 in the MVP to avoid duplicate appended annotations on retries.
 10. Use server-only credentials and an authenticated operator dashboard. Demo fixtures are explicitly labeled and isolated from installation data. The local dashboard does not substitute for live GitHub acceptance.
+11. Pin TypeScript 6.0.3 for the supported Compiler API and lint toolchain. TypeScript 7.0.2's installed package does not provide the same compiler-library interface. Next.js 16.3.8 and React 19.3.0 are pinned, with stable React Compiler support verified by the production build.
 
 ## Consequences
 
 PostgreSQL and Redis are required for the real pipeline. Queue delivery is at least once, with idempotent database effects and check publication; external calls cannot be made exactly once across a network crash. A persisted result is reused on publication retries. No untrusted repository code is executed.
 
-The user requested one minimal commit per PR, followed by merge. GitHub remote information is pending; local changes will be partitioned accordingly. Production deployment, live required-check enforcement, probability calibration and additional language parsers must be reported separately from local verification.
+The user requested one minimal commit per PR, followed by review, passing CI and merge. Changes are delivered to `zaewc/PRism` using that workflow. Production deployment, live required-check enforcement, calibration and additional parsers are reported separately from local verification.
