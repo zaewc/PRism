@@ -11,6 +11,7 @@ playwright-report/
 !.env.example
 *.pem
 *.key
+secrets/
 .DS_Store
 *.tsbuildinfo
 .local/
