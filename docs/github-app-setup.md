@@ -1,6 +1,6 @@
 # GitHub App setup and live acceptance
 
-This guide describes the implemented integration. It is not evidence of a live installation. No App private key or Jev credential was available during local verification.
+This guide describes the implemented integration. A live fixture installation has exercised authentication, deliveries, analysis and checks; successful Jev inference and ruleset enforcement remain pending. See the [live acceptance record](live-acceptance.md) for observed results and limits.
 
 ## Register and deploy
 
@@ -18,6 +18,8 @@ Create a GitHub App with a public HTTPS webhook URL ending in `/api/github/webho
 
 Subscribe to `pull_request`, `check_run`, `status`, `workflow_run` and `merge_group`. Installation creation, deletion, suspension and unsuspension are handled. Install on selected repositories. Repository-selection change synchronization is not implemented; token permissions remain the authorization boundary for removed repositories.
 
+Activate and save the webhook under **General** before opening **Permissions & events** to select event subscriptions. `merge_queue_entry` is a different event and does not replace `merge_group`.
+
 Configure `DATABASE_URL`, `REDIS_URL`, `GITHUB_APP_ID`, `GITHUB_APP_SLUG`, `GITHUB_PRIVATE_KEY_PATH`, `GITHUB_WEBHOOK_SECRET`, `JEV_API_KEY` and `APP_URL`. `APP_URL` must be the public dashboard origin: it supplies details links and validates browser writes behind a TLS proxy. Pin `JEV_MODEL=jev-1.13.0` unless intentionally evaluating another version. Enable `GITHUB_CODE_SCANNING=true` only with the corresponding permission and capability.
 
 The worker obtains short-lived installation tokens scoped to the job's repository. The service does not accept a PAT. Tokens, raw webhook bodies, source bodies and private-key values are not persisted as analysis data or logged.
@@ -34,7 +36,7 @@ Annotations are capped at 50 findings per job. The detail page contains complete
 
 ## Live acceptance record
 
-All items remain pending credentials. Record delivery/job ID, SHA, Check Run ID, model version and links when completing them:
+This table is the acceptance checklist, not a completion claim. Consult the [dated live record](live-acceptance.md) for completed and pending checks. Retain delivery/job ID, SHA, Check Run ID, model version and links privately when completing each scenario:
 
 | Scenario | Required observation |
 | --- | --- |
@@ -50,4 +52,4 @@ All items remain pending credentials. Record delivery/job ID, SHA, Check Run ID,
 | Merge queue | Check and CI on synthetic SHA enforce the policy |
 | App suspended/uninstalled | New jobs do not process as an active installation |
 
-Local HTTP contract doubles test API mapping, not real App permissions, TypeSafe model compatibility or ruleset enforcement. Verify these boundaries before treating an installation as production accepted.
+Local HTTP contract doubles test API mapping. The live fixture separately verifies App authentication, granted permissions, deliveries and annotations. TypeSafe inference and ruleset enforcement are still unverified; complete those boundaries before treating an installation as production accepted.
