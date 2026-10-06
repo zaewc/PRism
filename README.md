@@ -4,7 +4,7 @@
 
 Know the risk before you merge. PRism turns repository evidence, TypeSafe Jev judgment and versioned policy into a SHA-bound GitHub check: **SAFE**, **REVIEW** or **BLOCK**.
 
-The local MVP is implemented and verified. Live GitHub App installation, Jev responses and required-check enforcement remain **unverified** until real credentials and a test repository are configured. The public demo is a labeled synthetic replay of the same analysis engine.
+The local MVP and a live GitHub App fixture workflow are verified, including signed deliveries, queue processing, SHA-bound checks and authenticated operator APIs. Successful Jev inference and required-check enforcement remain **unverified**; see the [live acceptance record](docs/live-acceptance.md). The public demo is a labeled synthetic replay of the same analysis engine.
 
 ```mermaid
 flowchart LR
